@@ -41,8 +41,8 @@ sizes = simsizes;
 
 sizes.NumContStates  = 0;
 sizes.NumDiscStates  = 0;
-sizes.NumOutputs     = 3;
-sizes.NumInputs      = 7;
+sizes.NumOutputs     = 2;
+sizes.NumInputs      = 5;
 sizes.DirFeedthrough = 1;
 sizes.NumSampleTimes = 0;   % at least one sample time is needed
 
@@ -76,42 +76,38 @@ ts  = [];
 %
 function sys=mdlOutputs(t,x,u)
 
-m=1;
-J=1;
-
-m11ba=1.2;
-lamda=3; %Gama11=Gama22
-lamda3=-2; %Gama33
-e=1;
-w3=(-1)*e*lamda3;
-a=-lamda/w3;
+m1=0.6;
+m2=0.6;
+l1=0.3;
+l2=0.3;
+h1=(m1/3+m2)*l1*l1;
+h2=(m2/3)*l2*l2;
+h3=(m2/2)*l1*l2;
+h4=m2*l1+(m1/2)*l1;
+h5=(m2/2)*l2;
 g=9.8;
-p1=0.9;
-p2=0.9;
-d1=3.8;
-d2=3.8;
+theta1=u(1);
+d_theta1=u(2);
+theta2=u(3);
+d_theta2=u(4);
+d1=6;
+p1=16;
+a=2.5;
+w2ba=-1;
+temp1=((h3*cos(theta2)*h3*cos(theta2)+2*h2*h3*cos(theta2)+2*h2*h2-h1*h2)/(h2*h2)-a*(h1-h2)/(h3*cos(theta2)-h2))*h3*sin(theta2)*d_theta1*d_theta1/(a-2);
+temp2=-(h3*sin(theta2)+a*h3*sin(theta2)*(h3*cos(theta2)*h3*cos(theta2)-h1*h2)/(2*(a-2)*(h3*cos(theta2)-h2)*(h3*cos(theta2)-h2)))*(2*d_theta1*d_theta2+d_theta2*d_theta2);
+temp3=w2ba*(h3*cos(theta2)*h3*cos(theta2)-h1*h2)*(d1*(d_theta1+0.5*d_theta2)+p1*(theta1+0.5*theta2))/(2*(a-2)*h2*h2);
+temp4=-((h3*cos(theta2)*h3*cos(theta2)+2*h2*h3*cos(theta2)+2*h2*h2-h1*h2)/(h2*h2)-a*(h1-h2)/(2*(h3*cos(theta2)-h2)))*2*g*h5*sin(theta1+theta2)*(1/(a-2));
+temp5=-g*(h4*sin(theta1)+h5*sin(theta1+theta2));
 
-xd=-5; yd=5; %desired position
 
-xx=u(1);   %state x
-d_xx=u(2);
-y=u(3);    %state y
-d_y=u(4);
-theta=u(5); %state \theta
-d_theta=u(6);
-xe=xx-xd;
-ye=y-yd;
-
-k1=(lamda*m11ba-m)/(e*lamda3);
-k2=-(e*lamda3*m)/(e*e*J*lamda3*m11ba+m*lamda*m11ba-m*m);
- 
-v1=m*g*cos(theta)-k1*d_theta*d_theta*m/m11ba+d1*sin(theta)*d_xx*m/m11ba-d2*cos(theta)*d_y*m/m11ba+(d1-d2)*a*sin(theta)*cos(theta)*d_theta*m/m11ba+p1*sin(theta)*(xe+a*sin(theta))*m/m11ba-p2*(ye+a*(1-cos(theta)))*cos(theta)*m/m11ba;
-% 
-v2=J*k2*(d1*cos(theta)*d_xx+d2*sin(theta)*d_y+a*(d1*cos(theta)*cos(theta)+d2*sin(theta)*sin(theta))*d_theta+p1*cos(theta)*(xe+a*sin(theta))+p2*(ye+a*(1-cos(theta)))*sin(theta)-m11ba*g*sin(theta));
-
-sys(1)=v1;
-sys(2)=v2;
-sys(3)=u(7);
+% tao=((h3*cos(theta2)*h3*cos(theta2)+2*h2*h3*cos(theta2)+2*h2*h2-h1*h2)/(h2*h2)-a*(h1-h2)/(h3*cos(theta2)-h2))*h3*sin(theta2)*d_theta1*d_theta1/(a-2)-(h3*sin(theta2)+a*h3*sin(theta2)*(h3*cos(theta2)*h3*cos(theta2)-h1*h2)/(2*(a-2)*(h3*cos(theta2)-h2)*(h3*cos(theta2)-h2))*(2*d_theta1*d_theta2+d_theta2*d_theta2)
+% +w2ba*(h3*cos(theta2)*h3*cos(theta2)-h1*h2)*(d1*(d_theta1+0.5*d_theta2)+p1*(theta1+0.5*theta2))/(2*(a-2)*h2*h2)
+% -((h3*cos(theta2)*h3*cos(theta2)+2*h2*h3*cos(theta2)+2*h2*h2-h1*h2)/(h2*h2)-a*(h1-h2)/(2*(h3*cos(theta2)-h2)))*2*g*h5*sin(theta1+theta2)*(1/(a-2))
+% -g*(h4*sin(theta1)+h5*sin(theta1+theta2));
+  
+sys(1)=temp1+temp2+temp3+temp4+temp5;
+sys(2)=u(5);
 
 
 % end mdlOutputs
